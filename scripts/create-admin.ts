@@ -1,5 +1,5 @@
 import { MongoClient } from "mongodb"
-import { hash } from "bcrypt"
+import { hash } from "bcryptjs" // Changed from bcrypt to bcryptjs
 
 // This script creates an admin user in the database
 // Run it with: npx tsx scripts/create-admin.ts

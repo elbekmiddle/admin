@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
-import { compare, hash } from "bcrypt"
+import { compare, hash } from "bcryptjs" // Changed from bcrypt to bcryptjs
 import { authOptions } from "@/lib/auth"
 import clientPromise from "@/lib/mongodb"
 import { ObjectId } from "mongodb"

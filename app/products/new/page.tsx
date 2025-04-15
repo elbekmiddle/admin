@@ -11,12 +11,15 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { ImageUpload } from "@/components/ui/image-upload"
-import { toast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/use-toast"
+import { Loader2 } from "lucide-react"
 
 export default function NewProductPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [images, setImages] = useState<string[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -40,23 +43,31 @@ export default function NewProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
     try {
+      // Log the data being sent
+      const productData = {
+        ...formData,
+        price: Number.parseFloat(formData.price),
+        stock: Number.parseInt(formData.stock),
+        imageUrls: images,
+      }
+
+      console.log("Sending product data:", productData)
+
       const response = await fetch("/api/products", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...formData,
-          price: Number.parseFloat(formData.price),
-          stock: Number.parseInt(formData.stock),
-          imageUrls: images,
-        }),
+        body: JSON.stringify(productData),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error("Failed to create product")
+        throw new Error(data.error || data.details || "Failed to create product")
       }
 
       toast({
@@ -68,9 +79,10 @@ export default function NewProductPage() {
       router.refresh()
     } catch (error) {
       console.error("Error creating product:", error)
+      setError(error instanceof Error ? error.message : "Failed to create product. Please try again.")
       toast({
         title: "Error",
-        description: "Failed to create product. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create product. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -83,6 +95,13 @@ export default function NewProductPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Add New Product</h2>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid gap-6 md:grid-cols-2">
@@ -190,7 +209,14 @@ export default function NewProductPage() {
             Cancel
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save Product"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Product"
+            )}
           </Button>
         </div>
       </form>

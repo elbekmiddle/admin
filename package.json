@@ -70,8 +70,9 @@
     "mongodb": "latest",
     "cloudinary": "latest",
     "next-auth": "latest",
-    "bcryptjs": "latest",
-    "csv-parse": "latest"
+    "csv-parse": "latest",
+    "mongoose": "latest",
+    "bcryptjs": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
