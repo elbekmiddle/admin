@@ -51,7 +51,7 @@ CategorySchema.pre<ICategory>("save", (next) => {
 // Type for Category model
 type CategoryModel = Model<ICategory>
 
-// Check if the model exists to prevent overwriting during hot reloads
+// Export the model
 const Category: CategoryModel =
   (mongoose.models.Category as CategoryModel) || mongoose.model<ICategory, CategoryModel>("Category", CategorySchema)
 

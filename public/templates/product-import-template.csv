@@ -1,4 +1,0 @@
-name,description,price,category,stock,sku,status
-"Product Name 1","Product description goes here",19.99,Electronics,100,SKU001,In Stock
-"Product Name 2","Another product description",29.99,Clothing,50,SKU002,In Stock
-"Product Name 3","Yet another description",9.99,Accessories,25,SKU003,Low Stock

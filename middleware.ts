@@ -1,46 +1,41 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { getToken } from "next-auth/jwt"
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+// This function can be marked `async` if using `await` inside
+export function middleware(request: NextRequest) {
+  // Check if we're in a development environment
+  const isDevelopment = process.env.NODE_ENV === "development"
 
-  // Public paths that don't require authentication
-  const publicPaths = ["/auth/login", "/auth/register", "/auth/forgot-password"]
-  const isPublicPath = publicPaths.some((path) => pathname.startsWith(path))
+  // Only run this check in development
+  if (isDevelopment) {
+    // Check for required environment variables
+    const missingVars = []
 
-  // Check if the path is for API routes
-  if (pathname.startsWith("/api")) {
-    // For API routes, we'll let the API handlers handle authentication
-    return NextResponse.next()
-  }
+    if (!process.env.MONGODB_URI) missingVars.push("MONGODB_URI")
+    if (!process.env.CLOUDINARY_CLOUD_NAME) missingVars.push("CLOUDINARY_CLOUD_NAME")
+    if (!process.env.CLOUDINARY_API_KEY) missingVars.push("CLOUDINARY_API_KEY")
+    if (!process.env.CLOUDINARY_API_SECRET) missingVars.push("CLOUDINARY_API_SECRET")
 
-  // Check if the path is for Next.js resources
-  if (pathname.startsWith("/_next") || pathname.startsWith("/favicon.ico") || pathname.includes(".")) {
-    return NextResponse.next()
-  }
+    // If there are missing variables and this is an API route, show a warning
+    if (missingVars.length > 0 && request.nextUrl.pathname.startsWith("/api")) {
+      console.warn(`⚠️ Missing environment variables: ${missingVars.join(", ")}`)
 
-  // For auth pages, redirect to dashboard if already logged in
-  if (isPublicPath) {
-    const token = await getToken({ req: request })
-    if (token) {
-      return NextResponse.redirect(new URL("/", request.url))
+      // For API routes, return a JSON response
+      return NextResponse.json(
+        {
+          error: "Server configuration issue",
+          message: `Missing required environment variables: ${missingVars.join(", ")}`,
+          tip: "Add these variables to your .env.local file or deployment environment",
+        },
+        { status: 500 },
+      )
     }
-    return NextResponse.next()
-  }
-
-  // For all other routes, check if the user is authenticated
-  const token = await getToken({ req: request })
-
-  if (!token && !isPublicPath) {
-    const url = new URL("/auth/login", request.url)
-    url.searchParams.set("callbackUrl", encodeURI(request.url))
-    return NextResponse.redirect(url)
   }
 
   return NextResponse.next()
 }
 
+// Only run the middleware on API routes
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: "/api/:path*",
 }
